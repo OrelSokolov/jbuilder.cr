@@ -1,0 +1,9 @@
+name: jbuilder_cr
+version: 0.1.0
+crystal: ">= 1.21.0"
+description: |
+  Порт jbuilder 2.14.1 (github.com/rails/jbuilder) на Crystal — 1:1 API.
+  JSON-билдер для вьюх: json.foo bar / array! / extract! / merge! / key_format!.
+
+authors:
+  - oleg
