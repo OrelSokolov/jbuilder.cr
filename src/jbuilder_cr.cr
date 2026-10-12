@@ -19,6 +19,8 @@
 require "json"
 require "./jbuilder/errors"
 require "./jbuilder/key_formatter"
+require "./jbuilder/jbuilder_template"
+require "./jbuilder/handler"
 
 class Jbuilder
   BLANK = Blank.new
@@ -269,7 +271,7 @@ class Jbuilder
         end
       {% end %}
     {% else %}
-      set!({{ name }}{% unless call.args.empty? %}, {{ call.args.splat }}{% end %})
+      set!({{ name }}{% unless call.args.empty? %}, {{ call.args.splat }}{% end %}{% if call.named_args %}{% for na in call.named_args %}, {{ na.name.id }}: {{ na.value }}{% end %}{% end %})
     {% end %}
   end
 
@@ -331,7 +333,11 @@ class Jbuilder
     @attributes.as(Hash(String, Node))[_key(key)] = value
   end
 
-  def _set_array(array : Array(Node)) : Nil
+  # Без рестрикшена Array(Node): рекурсивный alias в ограничении аргумента
+  # не матчит фактический Array(Node) при вызове из тела метода, унаследо-
+  # ванного подклассом (json.array! в JbuilderTemplate уводило вызов в
+  # method_missing с ключом "_set_array") — см. баги Crystal 1.21 ниже.
+  def _set_array(array) : Nil
     @attributes = _merge_values(@attributes, array)
   end
 

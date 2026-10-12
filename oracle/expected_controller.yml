@@ -1,0 +1,4 @@
+show_format_json	200|application/json; charset=utf-8|{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}
+show_accept_header	200|application/json; charset=utf-8|{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}
+index_format_json	200|application/json; charset=utf-8|[{"id":1,"body":"Post #1"},{"id":2,"body":"Post #2"}]
+explicit_render	200|application/json; charset=utf-8|{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}}

@@ -7,3 +7,10 @@ description: |
 
 authors:
   - oleg
+
+dependencies:
+  # action_view_cr приходит транзитивно через action_pack_cr (явное
+  # объявление тем же путём, но записанным иначе, даёт shards
+  # "ambiguous sources").
+  action_pack_cr:
+    path: ../../rails.cr/action_pack.cr

@@ -7,11 +7,16 @@
 
 ## Статус
 
-**Готово, зелёное**: 110 примеров (`crystal spec`):
+**Готово, зелёное**: 142 примера (`make spec` = `CRAILS_VIEWS=spec/fixtures/app/views crystal spec`;
+без CRAILS_VIEWS — 138):
 - `spec/oracle_spec.cr` — 42 кейса, снятых с настоящего гема
   (`oracle/cases.rb > oracle/expected.yml`), воспроизводятся 1:1;
 - `spec/integration_spec.cr` — 68 тестов из официального `test/jbuilder_test.rb`
-  (v2.14.1), портированных с адаптацией под статическую типизацию.
+  (v2.14.1), портированных с адаптацией под статическую типизацию;
+- `spec/oracle_template_spec.cr` — 28 кейсов JbuilderTemplate (партиалы,
+  коллекции, cached:, cache!/cache_if!/cache_root!), снятых с настоящего
+  гема на чистом ActionView 8.1.4 + FixtureResolver
+  (`oracle/cases_template.rb > oracle/expected_template.yml`).
 
 ## API 1:1
 
@@ -49,10 +54,71 @@
    (`Array(Int32)`) — identity-перегрузки убраны.
 4. `set!(key, nil, &block)` через method_missing — сегфолт; закрыт явной
    Nil-перегрузкой.
+5. Recursive alias в restriction аргумента НЕ матчится при вызове из тела
+   метода, унаследованного подклассом: `json.array! [...]` в JbuilderTemplate
+   уводил внутренний `_set_array(...)` в method_missing с ключом "_set_array" —
+   рестрикшен `Array(Node)` у `_set_array` убран.
 
-## Интеграция с rails.cr (TODO)
+## Интеграция с rails.cr
 
-- `JbuilderTemplate` для action_view.cr: `render "show.json.jbuilder"`,
-  partials (`json.array! @posts, partial: "posts/post", as: :post`), cache!.
-- Railtie-регистрация `.json.jbuilder`-хендлера — после стабилизации
-  action_view.cr.
+### JbuilderTemplate ✅ (`src/jbuilder/jbuilder_template.cr`)
+
+Порт `jbuilder/jbuilder_template.rb` поверх action_view.cr:
+
+- `partial! "name", {"local" => value}` / `partial! "name", collection:,
+  as_local: "name"` (в т.ч. форма `partial: "name", collection: ...`);
+- `json.array! coll, partial: "post", as_local: "post"` и
+  `json.posts coll, partial: "post", as_local: "post"` (inline под ключом,
+  nil-коллекция → `[]`; одиночный объект — тоже);
+- `cached: true` — поэлементный кэш коллекции (cache_key элемента);
+- `cache!` / `cache_if!` / `cache_root!` (+ `expires_in`) — фрагментный кэш
+  через `ActionView.perform_caching` / `ActionView.cache_store`;
+- ошибки `:layout`/`:spacer_template` — те же NotImplementedError;
+- `compile_partials({...})` — компиляция `.json.jbuilder`-партиалов в методы
+  на этапе сборки (тело файла — валидный Crystal DSL, вставка через
+  `read_file`; вызывать внутри `class JbuilderTemplate ... end`).
+
+Отклонения от Ruby (см. шапку файла):
+- `as:` → `as_local:` (`as` — синтаксис приведения типов Crystal);
+- locals — Hash (именованно-произвольные ключи Ruby в Crystal невыразимы);
+- партиалы регистрируются compile-time, файловой рантайм-подстановки
+  (lookup_context) нет;
+- фрагмент кэша хранится JSON-строкой ("null" — сентинел пустого фрагмента);
+- cache_root!-ошибка — RuntimeError (обёртки ActionView::Template::Error нет).
+
+### Railtie-регистрация ✅ (`src/jbuilder/handler.cr`)
+
+Аналог JbuilderHandler + railtie для action_pack.cr (`~/rails.cr`):
+
+- кодоген action_pack.cr (src/base.cr) для каждого найденного
+  `#{action}.json.jbuilder` вызывает `JbuilderHandler.call` — шаблон
+  компилируется в метод (тело файла — валидный Crystal DSL, локальная
+  `json` = свежий JbuilderTemplate, ивары/хелперы контроллера видны,
+  как в Rails);
+- implicit render: `?format=json` / `Accept: application/json` →
+  `#{action}.json.jbuilder` без layout, `Content-Type:
+  application/json; charset=utf-8`;
+- явный рендер: `render(template: "posts/show.json.jbuilder")`
+  (также "posts/show" / "show" / "show.json.jbuilder");
+- оракул — Rails 8.1.4 + jbuilder 2.14.1, минимальное инлайн-приложение
+  без `rails new` (`oracle/cases_controller.rb > oracle/expected_controller.yml`,
+  4 кейса: implicit по format/Accept, коллекция, явный рендер), шаблоны
+  `oracle/views` и `spec/fixtures/app/views` байт-в-байт одинаковы;
+  зеркало — `spec/railtie_spec.cr`, запуск `make spec` (CRAILS_VIEWS
+  читается кодогеном на этапе компиляции; без него файл компилируется
+  в пустоту — bare `crystal spec` остальных 138 тестов не трогает).
+
+Отклонения от Ruby:
+- явный рендер — только именованный аргумент `render(template:)`:
+  позиционная строка render("...") в action_pack.cr занята телом
+  JSON-ответа, а позиционная перегрузка с той же формой ломает
+  именованную диспетчеризацию `render(json:)` (квирк Crystal 1.21);
+  в Rails позиционная форма `render "posts/show", formats: :json`
+  (полное имя файла в позиционной строке Rails 8.1 и сам не принимает);
+- рантайм-регистрации хендлеров нет: шаблон обязан существовать на
+  этапе сборки, приложение с .json.jbuilder-вьюхами обязано
+  `require "jbuilder_cr"` (без него константа JbuilderHandler не
+  разрешится — как в Rails без гема хендлер не зарегистрирован);
+- format=json при отсутствии .json.jbuilder у экшена рендерит html
+  (Rails поднимает ActionController::UnknownFormat / MissingTemplate) —
+  общее поведение implicit render в action_pack.cr, не jbuilder-специфика.

@@ -1,0 +1,35 @@
+tpl_basic	{"content":"hello"}
+tpl_partial_locals_top	{"content":"hello"}
+tpl_partial_locals_nested	{"content":"hello"}
+tpl_partial_by_options	{"content":"hello"}
+tpl_partial_subdir	{"id":123,"name":"Chris Harris"}
+tpl_partial_collection	[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]
+tpl_partial_collection_string_as	[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]
+tpl_partial_collection_by_options	[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]
+tpl_nil_collection	[]
+tpl_array_partials	[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]
+tpl_array_partials_empty	[]
+tpl_array_partials_nil	[]
+tpl_array_partials_under_key	{"posts":[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]}
+tpl_array_partials_under_key_nil	{"posts":[]}
+tpl_cached_option	[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]
+tpl_cached_entry	{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}
+tpl_cached_option_hit	[{"id":1,"body":"Post #1","author":{"first_name":"David","last_name":"Heinemeier Hansson"}},{"id":2,"body":"Post #2","author":{"first_name":"Pavel","last_name":"Pravosud"}},{"id":3,"body":"Post #3","author":{"first_name":"David","last_name":"Heinemeier Hansson"}}]
+tpl_cache_off_passthrough	{"name":"Fresh"}
+tpl_cache_off_stored_nil	nil
+tpl_cache_miss	{"name":"Hit"}
+tpl_cache_hit	{"name":"Hit"}
+tpl_cache_entry	{"name":"Hit"}
+tpl_cache_array	["a","b","c"]
+tpl_cache_array_hit	["a","b","c"]
+tpl_cache_expiry_zero	{"name":"Miss"}
+tpl_empty_fragment	{"foo":"bar"}
+tpl_cache_if	{"a":"Hit","b":"Fresh"}
+tpl_cache_if_miss	{"a":"Hit"}
+tpl_cache_root	{"name":"Hit"}
+tpl_cache_root_entry	"{\"name\":\"Hit\"}"
+tpl_cache_root_hit	{"name":"Hit"}
+tpl_cache_root_array	["d","e","f"]
+tpl_cache_root_error	cache_root! can't be used after JSON structures have been defined
+tpl_layout_error	NotImplementedError: The `:layout' option is not supported in collection rendering.
+tpl_spacer_error	NotImplementedError: The `:spacer_template' option is not supported in collection rendering.
