@@ -13,4 +13,5 @@ dependencies:
   # объявление тем же путём, но записанным иначе, даёт shards
   # "ambiguous sources").
   action_pack_cr:
-    path: ../../rails.cr/action_pack.cr
+    github: OrelSokolov/action_pack.cr
+    version: ~> 0.1.0
