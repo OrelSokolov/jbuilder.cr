@@ -14,4 +14,4 @@ dependencies:
   # "ambiguous sources").
   action_pack_cr:
     github: OrelSokolov/action_pack.cr
-    version: ~> 0.1.0
+    version: ">= 0.1.0"
