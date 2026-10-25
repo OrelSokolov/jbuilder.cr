@@ -160,6 +160,23 @@ class JbuilderTemplate < Jbuilder
     end
   end
 
+  # json.cache! user do ... end — объект-запись вместо строкового ключа:
+  # ключ строится из cache_key записи (Rails-форма json.cache! @user).
+  def cache!(object, expires_in : Time::Span? = nil, &) : Nil
+    if ActionView.perform_caching
+      cache_key = _jb_expand_cache_key(_jb_element_cache_key(object))
+      if (hit = ActionView.cache_store.read(cache_key)) && hit != "null"
+        _merge_attributes(_to_node(JSON.parse(hit)))
+      else
+        value = _scope { yield self; nil }
+        ActionView.cache_store.write(cache_key, _jb_node_json(value), expires_in)
+        _merge_attributes(value)
+      end
+    else
+      yield
+    end
+  end
+
   # json.cache_if! condition, "cache-key" do ... end
   def cache_if!(condition : Bool,
                 key : String | Symbol | Array(String | Symbol) | Nil = nil,
