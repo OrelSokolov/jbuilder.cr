@@ -257,8 +257,16 @@ class Jbuilder
   # обычные def-методы и находятся напрямую, сюда попадают только
   # произвольные имена ключей. Аргументы приходят переименованными
   # (_arg0) и обрабатываются на этапе выполнения.
+  # Internal underscore methods must NEVER land here: a call like
+  # `_ks(<Node union>)` (no matching overload) used to expand into
+  # `set!("_ks", node)` → set! → `_ks(...)` → method_missing → … — an
+  # infinite runtime recursion (stack overflow). The guard turns that
+  # into a compile error naming the call.
   macro method_missing(call)
     {% name = call.name.id.stringify %}
+    {% if name.starts_with?("_") %}
+      {% raise "internal method '#{name}' dispatched to Jbuilder method_missing in #{@type} — missing overload (call: #{call})" %}
+    {% end %}
     {% if call.block %}
       {% bargs = call.block.args %}
       {% if call.args.empty? %}
@@ -276,13 +284,20 @@ class Jbuilder
   end
 
   # Ключ: String или Symbol → String (runtime, т.к. через method_missing
-  # аргументы приходят как значения).
+  # аргументы приходят как значения). Catch-all: без него вызов _ks со
+  # статическим типом вне String|Symbol уходит в method_missing (см.
+  # комментарий там) — рекурсия; на практике не-строковых ключей не
+  # бывает, поэтому raise.
   def _ks(key : String) : String
     key
   end
 
   def _ks(key : Symbol) : String
     key.to_s
+  end
+
+  def _ks(key) : String
+    raise ArgumentError.new("_ks expects a String or Symbol key, got #{key.class}")
   end
 
   # Извлечение значения атрибута из объекта — runtime-замена public_send.
